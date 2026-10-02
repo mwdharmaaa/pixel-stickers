@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import type { PixelGrid, PixelTool } from '../../services/pixelizer/pixel_canvas.types'
+import type { PalettePreset } from '../../services/pixelizer/pixelizer.types'
 import {
   createEmptyGrid,
   cloneGrid,
 } from '../../services/pixelizer/pixel_canvas.engine'
-import { SWEET_PASTEL_HEX } from '../../services/pixelizer/palette_presets'
+import { getPresetHexColors } from '../../services/pixelizer/palette_presets'
 import { PixelToolbar } from './PixelToolbar'
 import { PixelPaletteBar } from './PixelPaletteBar'
 import { PixelEditor } from './PixelEditor'
@@ -14,7 +15,15 @@ interface StudioDrawSectionProps {
   onChangeGrid: (next: PixelGrid) => void
 }
 
-const GRID_SIZES = [16, 24, 32]
+const GRID_SIZES = [16, 24, 32, 48, 64]
+
+const DRAW_PALETTES: { id: Exclude<PalettePreset, 'full-color'>; label: string }[] = [
+  { id: 'sweet-pastel', label: 'Pastel' },
+  { id: 'pico-8', label: 'PICO-8' },
+  { id: 'gameboy', label: 'GameBoy' },
+  { id: 'cyberpunk', label: 'Neon' },
+  { id: 'warm-sunset', label: 'Sunset' },
+]
 
 export const StudioDrawSection: React.FC<StudioDrawSectionProps> = ({
   grid,
@@ -22,9 +31,18 @@ export const StudioDrawSection: React.FC<StudioDrawSectionProps> = ({
 }) => {
   const [activeTool, setActiveTool] = useState<PixelTool>('pencil')
   const [activeColor, setActiveColor] = useState<string>('#FF6B9D')
+  const [activePalette, setActivePalette] = useState<Exclude<PalettePreset, 'full-color'>>('sweet-pastel')
+  const [recentColors, setRecentColors] = useState<string[]>([])
   const [showGrid, setShowGrid] = useState<boolean>(true)
   const [history, setHistory] = useState<PixelGrid[]>([])
   const [redoStack, setRedoStack] = useState<PixelGrid[]>([])
+
+  const paletteColors = useMemo(() => getPresetHexColors(activePalette), [activePalette])
+
+  const handleSelectColor = (color: string) => {
+    setActiveColor(color)
+    setRecentColors((prev) => [color, ...prev.filter((c) => c.toUpperCase() !== color.toUpperCase())].slice(0, 6))
+  }
 
   const currentSize = grid.length > 0 ? grid.length : 24
 
@@ -57,23 +75,45 @@ export const StudioDrawSection: React.FC<StudioDrawSectionProps> = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-[#9aa1b8] font-medium">Canvas Grid Size</span>
-        <div className="flex items-center gap-1">
-          {GRID_SIZES.map((sz) => (
-            <button
-              key={sz}
-              type="button"
-              onClick={() => handleResetSize(sz)}
-              className={`px-2 py-1 rounded-md text-[10px] font-mono transition-colors ${
-                currentSize === sz
-                  ? 'bg-[#ff6b9d]/20 text-[#ff6b9d] border border-[#ff6b9d]/40'
-                  : 'bg-[#181b26] text-[#9aa1b8] hover:text-[#f3f4f8] border border-[#232737]'
-              }`}
-            >
-              {sz}x{sz}
-            </button>
-          ))}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-[#9aa1b8] font-medium">Palette:</span>
+          <div className="flex items-center gap-1 overflow-x-auto">
+            {DRAW_PALETTES.map((pal) => (
+              <button
+                key={pal.id}
+                type="button"
+                onClick={() => setActivePalette(pal.id)}
+                className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer ${
+                  activePalette === pal.id
+                    ? 'bg-[#ff6b9d]/20 text-[#ff6b9d] border border-[#ff6b9d]/50 font-semibold'
+                    : 'bg-[#181b26] text-[#8e95ad] hover:text-[#f3f4f8] border border-[#232737]'
+                }`}
+              >
+                {pal.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-xs text-[#9aa1b8] font-medium">Grid:</span>
+          <div className="flex items-center gap-1">
+            {GRID_SIZES.map((sz) => (
+              <button
+                key={sz}
+                type="button"
+                onClick={() => handleResetSize(sz)}
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                  currentSize === sz
+                    ? 'bg-[#ff6b9d]/20 text-[#ff6b9d] border border-[#ff6b9d]/40'
+                    : 'bg-[#181b26] text-[#9aa1b8] hover:text-[#f3f4f8] border border-[#232737]'
+                }`}
+              >
+                {sz}x{sz}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -91,8 +131,9 @@ export const StudioDrawSection: React.FC<StudioDrawSectionProps> = ({
 
       <PixelPaletteBar
         currentColor={activeColor}
-        onSelectColor={setActiveColor}
-        paletteColors={SWEET_PASTEL_HEX}
+        onSelectColor={handleSelectColor}
+        paletteColors={paletteColors}
+        recentColors={recentColors}
       />
 
       <PixelEditor
@@ -100,7 +141,7 @@ export const StudioDrawSection: React.FC<StudioDrawSectionProps> = ({
         onChangeGrid={handleGridChange}
         activeTool={activeTool}
         activeColor={activeColor}
-        onPickColor={setActiveColor}
+        onPickColor={handleSelectColor}
         showGrid={showGrid}
       />
     </div>

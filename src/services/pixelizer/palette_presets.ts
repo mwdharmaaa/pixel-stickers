@@ -60,3 +60,10 @@ export const SWEET_PASTEL_HEX: string[] = PALETTE_COLORS['sweet-pastel'].map(
   ([r, g, b]) =>
     `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`
 )
+
+export function getPresetHexColors(preset: Exclude<PalettePreset, 'full-color'>): string[] {
+  return PALETTE_COLORS[preset].map(
+    ([r, g, b]) =>
+      `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`
+  )
+}
