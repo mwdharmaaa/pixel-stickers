@@ -19,6 +19,7 @@ export const StickerDetailModal: React.FC<StickerDetailModalProps> = ({
   onClose,
   onDeleteCustom,
   onToggleFavorite,
+  onEditInStudio,
   onNotify,
 }) => {
   const [scale, setScale] = useState<number>(8)

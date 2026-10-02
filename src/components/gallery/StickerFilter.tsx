@@ -34,6 +34,8 @@ export const StickerFilter: React.FC<StickerFilterProps> = ({
   counts,
   onSelectCategory,
   onSearchChange,
+  onDownloadZip,
+  isDownloadingZip,
 }) => {
   return (
     <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8">

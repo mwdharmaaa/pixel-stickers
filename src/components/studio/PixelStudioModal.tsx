@@ -63,11 +63,7 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
     if (initialSticker) {
       setMode('draw')
       setTitle(initialSticker.title)
-      setCategory(
-        (initialSticker.category === 'all' || initialSticker.category === 'favorites'
-          ? 'animals'
-          : initialSticker.category) as Exclude<StickerCategory, 'all' | 'favorites'>
-      )
+      setCategory(initialSticker.category)
       setTagsInput(initialSticker.tags.join(', '))
       dataUrlToPixelGrid(initialSticker.pixelDataUrl)
         .then((grid) => {
