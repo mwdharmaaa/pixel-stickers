@@ -114,3 +114,41 @@ export function pixelGridToDataUrl(grid: PixelGrid): string {
   const canvas = pixelGridToCanvas(grid)
   return canvas.toDataURL('image/png')
 }
+
+export async function dataUrlToPixelGrid(dataUrl: string): Promise<PixelGrid> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth || img.width
+      canvas.height = img.naturalHeight || img.height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return resolve([])
+      ctx.drawImage(img, 0, 0)
+      const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const grid: PixelGrid = []
+      for (let y = 0; y < height; y++) {
+        const row: string[] = []
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4
+          const r = data[idx]
+          const g = data[idx + 1]
+          const b = data[idx + 2]
+          const a = data[idx + 3]
+          if (a < 10) {
+            row.push('')
+          } else {
+            const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`
+            row.push(hex)
+          }
+        }
+        grid.push(row)
+      }
+      resolve(grid)
+    }
+    img.onerror = () => reject(new Error('Failed to load image to pixel grid'))
+    img.src = dataUrl
+  })
+}
+

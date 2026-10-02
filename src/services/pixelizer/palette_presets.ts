@@ -55,3 +55,8 @@ export const PALETTE_COLORS: Record<Exclude<PalettePreset, 'full-color'>, [numbe
     [255, 255, 255],
   ],
 }
+
+export const SWEET_PASTEL_HEX: string[] = PALETTE_COLORS['sweet-pastel'].map(
+  ([r, g, b]) =>
+    `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`
+)
