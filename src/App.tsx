@@ -11,6 +11,7 @@ import {
   importStickersFromJsonString,
 } from './services/storage/sticker_storage.service'
 import { downloadSticker, copyStickerToClipboard } from './services/export/sticker_exporter.service'
+import { exportStickersToZip } from './services/export/batch_zip_exporter.service'
 import { Navbar } from './components/layout/Navbar'
 import { Footer } from './components/layout/Footer'
 import { StickerFilter } from './components/gallery/StickerFilter'
@@ -28,6 +29,7 @@ export const App: React.FC = () => {
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null)
   const [editingSticker, setEditingSticker] = useState<Sticker | null>(null)
   const [isStudioOpen, setIsStudioOpen] = useState(false)
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => {
     try {
@@ -185,6 +187,25 @@ export const App: React.FC = () => {
     reader.readAsText(file)
   }
 
+  const handleDownloadPackZip = async () => {
+    if (filteredStickers.length === 0) {
+      notify('No stickers to export in current view', 'error')
+      return
+    }
+    try {
+      setIsDownloadingZip(true)
+      notify(`Packaging ${filteredStickers.length} stickers into ZIP archive...`, 'success')
+      const packName = `pixely-${category}-pack`
+      await exportStickersToZip(filteredStickers, packName, 4)
+      notify(`Exported ${filteredStickers.length} stickers as ZIP pack!`, 'success')
+    } catch (err) {
+      console.error(err)
+      notify('Failed to generate ZIP archive', 'error')
+    } finally {
+      setIsDownloadingZip(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0c0d12] text-[#f3f4f8] flex flex-col selection:bg-[#ff6b9d] selection:text-[#0c0d12]">
       <Navbar
@@ -243,6 +264,8 @@ export const App: React.FC = () => {
           counts={counts}
           onSelectCategory={setCategory}
           onSearchChange={setSearchQuery}
+          onDownloadZip={handleDownloadPackZip}
+          isDownloadingZip={isDownloadingZip}
         />
 
         <StickerGrid
