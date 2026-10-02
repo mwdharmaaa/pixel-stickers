@@ -1,9 +1,12 @@
 import React from 'react'
-import { Sparkles, Plus, DownloadCloud, Layers } from 'lucide-react'
+import { Sparkles, Plus, DownloadCloud, Layers, Sun, Moon } from 'lucide-react'
+import type { AppTheme } from '../../services/theme/theme.types'
 
 interface NavbarProps {
   totalStickers: number
   customCount: number
+  theme: AppTheme
+  onToggleTheme: () => void
   onOpenStudio: () => void
   onExportBackup: () => void
 }
@@ -11,6 +14,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   totalStickers,
   customCount,
+  theme,
+  onToggleTheme,
   onOpenStudio,
   onExportBackup,
 }) => {
@@ -45,6 +50,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               <strong className="text-[#f3f4f8] font-medium">{totalStickers}</strong> stickers ({customCount} custom)
             </span>
           </div>
+
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            title={theme === 'pink-light' ? 'Switch to Dark Studio' : 'Switch to Rose Light'}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#272a3a] bg-[#161822] text-[#9aa1b8] hover:text-[#f3f4f8] hover:border-[#383e54] text-xs font-medium transition-all"
+          >
+            {theme === 'pink-light' ? (
+              <>
+                <Moon className="w-3.5 h-3.5 text-[#f43f5e]" />
+                <span className="hidden sm:inline">Dark Studio</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-3.5 h-3.5 text-[#ff6b9d]" />
+                <span className="hidden sm:inline">Rose Light</span>
+              </>
+            )}
+          </button>
 
           <button
             type="button"

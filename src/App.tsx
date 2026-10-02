@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Sparkles, ImagePlus, HeartHandshake } from 'lucide-react'
 import type { Sticker, StickerCategory } from './types/sticker.types'
+import type { AppTheme } from './services/theme/theme.types'
+import { getSavedTheme, applyTheme, getNextTheme } from './services/theme/theme.service'
 import { generateDefaultStickers } from './data/matrix_renderer'
 import { loadStoredStickers, deleteStoredSticker, exportStickersToJson } from './services/storage/sticker_storage.service'
 import { downloadSticker, copyStickerToClipboard } from './services/export/sticker_exporter.service'
@@ -13,6 +15,7 @@ import { PixelStudioModal } from './components/studio/PixelStudioModal'
 import { Toast, type ToastMessage } from './components/common/Toast'
 
 export const App: React.FC = () => {
+  const [theme, setTheme] = useState<AppTheme>(() => getSavedTheme())
   const [defaultStickers, setDefaultStickers] = useState<Sticker[]>([])
   const [customStickers, setCustomStickers] = useState<Sticker[]>([])
   const [category, setCategory] = useState<StickerCategory>('all')
@@ -29,8 +32,9 @@ export const App: React.FC = () => {
     }
   })
 
-  // Initialize stickers on mount
+  // Initialize stickers and theme on mount
   useEffect(() => {
+    applyTheme(theme)
     const defaults = generateDefaultStickers()
     setDefaultStickers(defaults)
     const stored = loadStoredStickers()
@@ -39,6 +43,20 @@ export const App: React.FC = () => {
 
   const notify = (text: string, type: 'success' | 'error' = 'success') => {
     setToast({ id: String(Date.now()), type, text })
+  }
+
+  const handleToggleTheme = () => {
+    setTheme((curr) => {
+      const next = getNextTheme(curr)
+      applyTheme(next)
+      notify(
+        next === 'pink-light'
+          ? 'Switched to Rose Light Mode'
+          : 'Switched to Dark Studio',
+        'success'
+      )
+      return next
+    })
   }
 
   const toggleFavorite = (id: string, e?: React.MouseEvent) => {
@@ -145,6 +163,8 @@ export const App: React.FC = () => {
       <Navbar
         totalStickers={allStickers.length}
         customCount={customStickers.length}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onOpenStudio={() => setIsStudioOpen(true)}
         onExportBackup={() => {
           exportStickersToJson(allStickers)
