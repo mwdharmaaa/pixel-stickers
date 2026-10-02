@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "══════════════════════════════════════════════════════════════"
-echo "  Redeploying Pixel Stickers Vault (@mwdhrmaaa)               "
+echo "  Redeploying Pixely (@mwdhrmaaa)                             "
 echo "══════════════════════════════════════════════════════════════"
 
 ACTIVE_BRANCH=$(git rev-parse --abbrev-ref HEAD || echo "devv")

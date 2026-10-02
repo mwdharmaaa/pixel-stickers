@@ -1,6 +1,6 @@
 @echo off
 echo ==============================================================
-echo   Running Automated Tests: Pixel Stickers Vault
+echo   Running Automated Tests: Pixely
 echo ==============================================================
 npm.cmd run test
 if %ERRORLEVEL% equ 0 (

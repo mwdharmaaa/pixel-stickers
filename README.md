@@ -1,4 +1,4 @@
-# Pixel Vault - Cute Pixel Stickers & Studio (@mwdhrmaaa)
+# Pixely - Cute Pixel Stickers & Studio (@mwdhrmaaa)
 
 A lightweight, serverless web application showcasing curated retro pixel art stickers, an in-browser real-time pixelizer studio to convert reference images into pixel stickers, and local persistence. 100% private, offline-ready, and zero server costs.
 
@@ -11,8 +11,8 @@ A lightweight, serverless web application showcasing curated retro pixel art sti
   * Real-time canvas engine converting any reference photo or illustration into pixel stickers.
   * Interactive Pixel Canvas Editor with pencil, eraser, pipette color picker, bucket fill, undo/redo, and grid overlay.
   * Direct retouch workflow: seamlessly load auto-generated pixel stickers into the canvas to clean up stray pixels before saving.
-  * Configurable pixel density (12px to 64px) and color quantization.
-  * 6 Retro Palette Presets: Sweet Pastel, PICO-8 16, Game Boy 4-shade, Cyberpunk Neon, Warm Sunset, and Original Full Color.
+  * Configurable pixel density (12px to 128px HD) and aspect ratio controls (Auto, 1:1, 4:3, 3:4, 16:9).
+  * 6 Retro Palette Presets: Original True Colors (default), Sweet Pastel, PICO-8 16, Game Boy 4-shade, Cyberpunk Neon, and Warm Sunset.
   * Automatic background removal keying and die-cut white sticker outline generation.
 * **Client-Side Storage & Favorites:**
   * User-created stickers persist locally via browser storage (`localStorage`).
@@ -28,7 +28,7 @@ A lightweight, serverless web application showcasing curated retro pixel art sti
 ## 2. Architecture & File Hierarchy
 
 ```text
-pixel-stickers/
+pixely/
 ├── Dockerfile                   # Multi-stage build with Nginx Alpine runtime
 ├── docker-compose.yml           # Container orchestration with health check (port 3000)
 ├── deploy.sh                    # Single-enter test-and-deploy bundle

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "══════════════════════════════════════════════════════════════"
-echo "  Deploying Pixel Stickers Vault & Studio (@mwdhrmaaa)        "
+echo "  Deploying Pixely - Pixel Stickers & Studio (@mwdhrmaaa)     "
 echo "══════════════════════════════════════════════════════════════"
 
 # 1. Dependency Resolution
@@ -25,7 +25,7 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
 
     echo "[*] Waiting for container health check..."
     for i in {1..15}; do
-        HEALTH=$(docker inspect --format='{{json .State.Health.Status}}' pixel-stickers-app 2>/dev/null || echo "starting")
+        HEALTH=$(docker inspect --format='{{json .State.Health.Status}}' pixely-app 2>/dev/null || echo "starting")
         if [ "$HEALTH" = "\"healthy\"" ] || [ "$HEALTH" = "healthy" ]; then
             echo "[OK] Container is healthy!"
             break

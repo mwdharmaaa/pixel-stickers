@@ -44,7 +44,7 @@ export function exportStickersToJson(stickers: Sticker[]): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `pixel-stickers-backup-${Date.now()}.json`
+  a.download = `pixely-backup-${Date.now()}.json`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-base tracking-tight text-[#f3f4f8]">
-                PIXEL VAULT
+                PIXELY
               </span>
               <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#1e2230] text-[#9aa1b8] border border-[#2d3246]">
                 v1.0

@@ -1,9 +1,9 @@
 services:
-  pixel-stickers:
+  pixely:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pixel-stickers-app
+    container_name: pixely-app
     restart: unless-stopped
     ports:
       - "3000:80"
