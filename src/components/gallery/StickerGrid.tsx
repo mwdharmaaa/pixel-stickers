@@ -8,6 +8,7 @@ interface StickerGridProps {
   onSelectSticker: (sticker: Sticker) => void
   onQuickDownload: (e: React.MouseEvent, sticker: Sticker) => void
   onQuickCopy: (e: React.MouseEvent, sticker: Sticker) => void
+  onToggleFavorite: (id: string, e: React.MouseEvent) => void
   onOpenStudio: () => void
 }
 
@@ -16,6 +17,7 @@ export const StickerGrid: React.FC<StickerGridProps> = ({
   onSelectSticker,
   onQuickDownload,
   onQuickCopy,
+  onToggleFavorite,
   onOpenStudio,
 }) => {
   if (stickers.length === 0) {
@@ -49,6 +51,7 @@ export const StickerGrid: React.FC<StickerGridProps> = ({
           onSelect={onSelectSticker}
           onQuickDownload={onQuickDownload}
           onQuickCopy={onQuickCopy}
+          onToggleFavorite={onToggleFavorite}
         />
       ))}
     </div>

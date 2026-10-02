@@ -20,6 +20,14 @@ export const App: React.FC = () => {
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null)
   const [isStudioOpen, setIsStudioOpen] = useState(false)
   const [toast, setToast] = useState<ToastMessage | null>(null)
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('pixel_stickers_favs')
+      return raw ? new Set(JSON.parse(raw)) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
 
   // Initialize stickers on mount
   useEffect(() => {
@@ -33,16 +41,44 @@ export const App: React.FC = () => {
     setToast({ id: String(Date.now()), type, text })
   }
 
+  const toggleFavorite = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    setFavoriteIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+        notify('Removed from favorites', 'success')
+      } else {
+        next.add(id)
+        notify('Added to favorites', 'success')
+      }
+      try {
+        localStorage.setItem(
+          'pixel_stickers_favs',
+          JSON.stringify(Array.from(next))
+        )
+      } catch (err) {
+        console.error('Failed to save favorites', err)
+      }
+      return next
+    })
+  }
+
   // Combined sticker list
   const allStickers = useMemo(
-    () => [...customStickers, ...defaultStickers],
-    [customStickers, defaultStickers]
+    () =>
+      [...customStickers, ...defaultStickers].map((s) => ({
+        ...s,
+        isFavorite: favoriteIds.has(s.id),
+      })),
+    [customStickers, defaultStickers, favoriteIds]
   )
 
   // Category counts
   const counts = useMemo(() => {
     const map: Record<StickerCategory, number> = {
       all: allStickers.length,
+      favorites: allStickers.filter((s) => s.isFavorite).length,
       animals: 0,
       food: 0,
       gaming: 0,
@@ -62,9 +98,11 @@ export const App: React.FC = () => {
       const matchCat =
         category === 'all'
           ? true
-          : category === 'custom'
-            ? sticker.isCustom
-            : sticker.category === category
+          : category === 'favorites'
+            ? Boolean(sticker.isFavorite)
+            : category === 'custom'
+              ? sticker.isCustom
+              : sticker.category === category
 
       const query = searchQuery.toLowerCase().trim()
       const matchSearch =
@@ -164,6 +202,7 @@ export const App: React.FC = () => {
           onSelectSticker={setSelectedSticker}
           onQuickDownload={handleQuickDownload}
           onQuickCopy={handleQuickCopy}
+          onToggleFavorite={toggleFavorite}
           onOpenStudio={() => setIsStudioOpen(true)}
         />
       </main>
@@ -175,6 +214,7 @@ export const App: React.FC = () => {
         sticker={selectedSticker}
         onClose={() => setSelectedSticker(null)}
         onDeleteCustom={handleDeleteCustom}
+        onToggleFavorite={toggleFavorite}
         onNotify={notify}
       />
 

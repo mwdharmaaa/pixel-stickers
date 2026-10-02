@@ -1,13 +1,15 @@
 import React, { useState } from 'react'
-import { X, Download, Copy, Trash2, Check, ZoomIn } from 'lucide-react'
+import { X, Download, Copy, Trash2, Check, ZoomIn, Heart, FileCode2 } from 'lucide-react'
 import type { Sticker } from '../../types/sticker.types'
 import { downloadSticker, copyStickerToClipboard } from '../../services/export/sticker_exporter.service'
+import { downloadStickerSvg, downloadStickerWebp } from '../../services/export/sticker_vector_exporter.service'
 import { Badge } from '../common/Badge'
 
 interface StickerDetailModalProps {
   sticker: Sticker | null
   onClose: () => void
   onDeleteCustom?: (id: string) => void
+  onToggleFavorite?: (id: string) => void
   onNotify: (text: string, type: 'success' | 'error') => void
 }
 
@@ -15,6 +17,7 @@ export const StickerDetailModal: React.FC<StickerDetailModalProps> = ({
   sticker,
   onClose,
   onDeleteCustom,
+  onToggleFavorite,
   onNotify,
 }) => {
   const [scale, setScale] = useState<number>(8)
@@ -30,6 +33,30 @@ export const StickerDetailModal: React.FC<StickerDetailModalProps> = ({
       onNotify(`Downloaded ${sticker.title} (${scale}x)`, 'success')
     } catch {
       onNotify('Failed to download sticker', 'error')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleDownloadSvg = async () => {
+    try {
+      setIsExporting(true)
+      await downloadStickerSvg(sticker.pixelDataUrl, sticker.title, 16)
+      onNotify(`Downloaded ${sticker.title} as Scalable Vector SVG`, 'success')
+    } catch {
+      onNotify('Failed to export vector SVG', 'error')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleDownloadWebp = async () => {
+    try {
+      setIsExporting(true)
+      await downloadStickerWebp(sticker.pixelDataUrl, sticker.title, scale)
+      onNotify(`Downloaded ${sticker.title} as WebP (${scale}x)`, 'success')
+    } catch {
+      onNotify('Failed to export WebP', 'error')
     } finally {
       setIsExporting(false)
     }
@@ -72,13 +99,33 @@ export const StickerDetailModal: React.FC<StickerDetailModalProps> = ({
               </span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-[#656b82] hover:text-[#f3f4f8] hover:bg-[#1e2230] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {onToggleFavorite && (
+              <button
+                type="button"
+                onClick={() => onToggleFavorite(sticker.id)}
+                title={sticker.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                className={`p-1.5 rounded-lg border transition-colors ${
+                  sticker.isFavorite
+                    ? 'bg-[#ff6b9d]/15 border-[#ff6b9d]/40 text-[#ff6b9d]'
+                    : 'border-[#272a3a] text-[#656b82] hover:text-[#ff6b9d]'
+                }`}
+              >
+                <Heart
+                  className={`w-4 h-4 ${
+                    sticker.isFavorite ? 'fill-[#ff6b9d]' : ''
+                  }`}
+                />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-[#656b82] hover:text-[#f3f4f8] hover:bg-[#1e2230] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -189,6 +236,27 @@ export const StickerDetailModal: React.FC<StickerDetailModalProps> = ({
                   className="px-3 py-2 rounded-lg border border-[#2d3246] bg-[#181b26] hover:border-[#ff6b9d]/60 text-[#9aa1b8] hover:text-[#f3f4f8] text-xs font-medium transition-colors"
                 >
                   <Copy className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={handleDownloadSvg}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#2d3246] bg-[#181b26] hover:border-[#ff6b9d]/60 text-xs font-medium text-[#9aa1b8] hover:text-[#f3f4f8] transition-colors disabled:opacity-50"
+                >
+                  <FileCode2 className="w-3.5 h-3.5 text-[#ff6b9d]" />
+                  <span>Vector SVG</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={handleDownloadWebp}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#2d3246] bg-[#181b26] hover:border-[#ff6b9d]/60 text-xs font-medium text-[#9aa1b8] hover:text-[#f3f4f8] transition-colors disabled:opacity-50"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>WebP ({scale}x)</span>
                 </button>
               </div>
 

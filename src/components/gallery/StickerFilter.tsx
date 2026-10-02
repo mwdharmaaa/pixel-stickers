@@ -9,6 +9,7 @@ interface CategoryItem {
 
 const CATEGORIES: CategoryItem[] = [
   { key: 'all', label: 'All Stickers' },
+  { key: 'favorites', label: 'Favorites' },
   { key: 'animals', label: 'Animals' },
   { key: 'food', label: 'Food & Sweets' },
   { key: 'gaming', label: 'Retro Gaming' },

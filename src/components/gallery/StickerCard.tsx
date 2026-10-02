@@ -1,5 +1,5 @@
 import React from 'react'
-import { Download, Copy, Sparkles } from 'lucide-react'
+import { Download, Copy, Sparkles, Heart } from 'lucide-react'
 import type { Sticker } from '../../types/sticker.types'
 import { Badge } from '../common/Badge'
 
@@ -8,6 +8,7 @@ interface StickerCardProps {
   onSelect: (sticker: Sticker) => void
   onQuickDownload: (e: React.MouseEvent, sticker: Sticker) => void
   onQuickCopy: (e: React.MouseEvent, sticker: Sticker) => void
+  onToggleFavorite: (id: string, e: React.MouseEvent) => void
 }
 
 export const StickerCard: React.FC<StickerCardProps> = ({
@@ -15,6 +16,7 @@ export const StickerCard: React.FC<StickerCardProps> = ({
   onSelect,
   onQuickDownload,
   onQuickCopy,
+  onToggleFavorite,
 }) => {
   return (
     <div
@@ -55,6 +57,24 @@ export const StickerCard: React.FC<StickerCardProps> = ({
             <Download className="w-3.5 h-3.5 stroke-[2.5]" />
           </button>
         </div>
+
+        {/* Favorite Heart Button */}
+        <button
+          type="button"
+          onClick={(e) => onToggleFavorite(sticker.id, e)}
+          title={sticker.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          className={`absolute bottom-2 right-2 p-1.5 rounded-md transition-all shadow-sm ${
+            sticker.isFavorite
+              ? 'bg-[#ff6b9d]/20 text-[#ff6b9d] border border-[#ff6b9d]/50 opacity-100'
+              : 'bg-[#0c0d12]/90 border border-[#2d3246] text-[#9aa1b8] hover:text-[#ff6b9d] opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          <Heart
+            className={`w-3.5 h-3.5 ${
+              sticker.isFavorite ? 'fill-[#ff6b9d]' : ''
+            }`}
+          />
+        </button>
       </div>
 
       {/* Info Footer */}
