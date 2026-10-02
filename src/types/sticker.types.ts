@@ -1,5 +1,6 @@
 export type StickerCategory =
   | 'all'
+  | 'favorites'
   | 'animals'
   | 'food'
   | 'gaming'
@@ -15,13 +16,14 @@ export interface StickerColor {
 export interface Sticker {
   id: string
   title: string
-  category: Exclude<StickerCategory, 'all'>
+  category: Exclude<StickerCategory, 'all' | 'favorites'>
   tags: string[]
   pixelDataUrl: string
   width: number
   height: number
   colors: string[]
   isCustom?: boolean
+  isFavorite?: boolean
   createdAt: number
 }
 
