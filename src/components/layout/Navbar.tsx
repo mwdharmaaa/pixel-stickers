@@ -1,5 +1,5 @@
-import React from 'react'
-import { Sparkles, Plus, DownloadCloud, Layers, Sun, Moon } from 'lucide-react'
+import React, { useRef } from 'react'
+import { Sparkles, Plus, DownloadCloud, UploadCloud, Layers, Sun, Moon } from 'lucide-react'
 import type { AppTheme } from '../../services/theme/theme.types'
 
 interface NavbarProps {
@@ -9,6 +9,7 @@ interface NavbarProps {
   onToggleTheme: () => void
   onOpenStudio: () => void
   onExportBackup: () => void
+  onImportBackup: (file: File) => void
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,7 +19,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleTheme,
   onOpenStudio,
   onExportBackup,
+  onImportBackup,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      onImportBackup(file)
+      e.target.value = ''
+    }
+  }
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#232737] bg-[#0c0d12]/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -79,6 +91,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             <DownloadCloud className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Backup</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            title="Restore stickers from JSON backup"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#272a3a] bg-[#161822] text-[#9aa1b8] hover:text-[#f3f4f8] hover:border-[#383e54] text-xs font-medium transition-all cursor-pointer"
+          >
+            <UploadCloud className="w-3.5 h-3.5 text-[#38bdf8]" />
+            <span className="hidden sm:inline">Restore</span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleFileChange}
+          />
 
           <button
             type="button"

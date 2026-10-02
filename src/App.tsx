@@ -4,7 +4,12 @@ import type { Sticker, StickerCategory } from './types/sticker.types'
 import type { AppTheme } from './services/theme/theme.types'
 import { getSavedTheme, applyTheme, getNextTheme } from './services/theme/theme.service'
 import { generateDefaultStickers } from './data/matrix_renderer'
-import { loadStoredStickers, deleteStoredSticker, exportStickersToJson } from './services/storage/sticker_storage.service'
+import {
+  loadStoredStickers,
+  deleteStoredSticker,
+  exportStickersToJson,
+  importStickersFromJsonString,
+} from './services/storage/sticker_storage.service'
 import { downloadSticker, copyStickerToClipboard } from './services/export/sticker_exporter.service'
 import { Navbar } from './components/layout/Navbar'
 import { Footer } from './components/layout/Footer'
@@ -158,6 +163,27 @@ export const App: React.FC = () => {
     notify('Custom sticker deleted', 'success')
   }
 
+  const handleImportBackup = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+      if (!content) {
+        notify('Failed to read backup file', 'error')
+        return
+      }
+      const res = importStickersFromJsonString(content)
+      if (res.success) {
+        const stored = loadStoredStickers()
+        setCustomStickers(stored)
+        notify(`Restored ${res.importedCount} stickers successfully`, 'success')
+      } else {
+        notify(res.error || 'Failed to import backup', 'error')
+      }
+    }
+    reader.onerror = () => notify('Error reading backup file', 'error')
+    reader.readAsText(file)
+  }
+
   return (
     <div className="min-h-screen bg-[#0c0d12] text-[#f3f4f8] flex flex-col selection:bg-[#ff6b9d] selection:text-[#0c0d12]">
       <Navbar
@@ -170,6 +196,7 @@ export const App: React.FC = () => {
           exportStickersToJson(allStickers)
           notify('Exported sticker vault backup JSON', 'success')
         }}
+        onImportBackup={handleImportBackup}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -181,7 +208,7 @@ export const App: React.FC = () => {
               <span>Free Pixel Art & Real-time Generator</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#f3f4f8]">
-              Cute Pixel Stickers Vault
+              Pixely - Cute Pixel Stickers Vault
             </h1>
             <p className="text-xs sm:text-sm text-[#9aa1b8] mt-2 leading-relaxed">
               Download crisp retro pixel art stickers, convert your reference images into pixel stickers in real-time, or add your own creations. 100% serverless, private, and offline-ready.

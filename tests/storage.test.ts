@@ -3,6 +3,7 @@ import {
   loadStoredStickers,
   saveStoredSticker,
   deleteStoredSticker,
+  importStickersFromJsonString,
 } from '../src/services/storage/sticker_storage.service'
 import type { Sticker } from '../src/types/sticker.types'
 
@@ -72,5 +73,42 @@ describe('sticker_storage service', () => {
     const deleted = deleteStoredSticker('test-del')
     expect(deleted).toBe(true)
     expect(loadStoredStickers().length).toBe(0)
+  })
+
+  it('validates sticker schema and imports valid stickers from JSON backup', () => {
+    const backupJson = JSON.stringify([
+      {
+        id: 'backup-1',
+        title: 'Restored Pixel Frog',
+        category: 'animals',
+        tags: ['frog'],
+        pixelDataUrl: 'data:image/png;base64,frog',
+        width: 24,
+        height: 24,
+        colors: ['#55EFC4'],
+        isCustom: true,
+        createdAt: 987654321,
+      },
+      {
+        invalid: 'malformed item',
+      },
+    ])
+
+    const result = importStickersFromJsonString(backupJson)
+    expect(result.success).toBe(true)
+    expect(result.importedCount).toBe(1)
+
+    const stored = loadStoredStickers()
+    expect(stored.length).toBe(1)
+    expect(stored[0].title).toBe('Restored Pixel Frog')
+  })
+
+  it('rejects malformed or empty backup payloads gracefully', () => {
+    const invalidJsonResult = importStickersFromJsonString('{ invalid json }')
+    expect(invalidJsonResult.success).toBe(false)
+    expect(invalidJsonResult.importedCount).toBe(0)
+
+    const nonArrayResult = importStickersFromJsonString('{"foo": "bar"}')
+    expect(nonArrayResult.success).toBe(false)
   })
 })

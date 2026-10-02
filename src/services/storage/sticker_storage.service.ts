@@ -50,3 +50,51 @@ export function exportStickersToJson(stickers: Sticker[]): void {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
+
+export interface ImportBackupResult {
+  success: boolean
+  importedCount: number
+  error?: string
+}
+
+export function validateStickerSchema(item: unknown): item is Sticker {
+  if (!item || typeof item !== 'object') return false
+  const s = item as Partial<Sticker>
+  return (
+    typeof s.id === 'string' &&
+    typeof s.title === 'string' &&
+    typeof s.category === 'string' &&
+    typeof s.pixelDataUrl === 'string' &&
+    typeof s.width === 'number' &&
+    typeof s.height === 'number' &&
+    Array.isArray(s.colors)
+  )
+}
+
+export function importStickersFromJsonString(jsonString: string): ImportBackupResult {
+  try {
+    const parsed = JSON.parse(jsonString)
+    if (!Array.isArray(parsed)) {
+      return { success: false, importedCount: 0, error: 'File content must be an array of stickers' }
+    }
+
+    const validStickers = parsed.filter(validateStickerSchema)
+    if (validStickers.length === 0) {
+      return { success: false, importedCount: 0, error: 'No valid stickers found in backup file' }
+    }
+
+    const existing = loadStoredStickers()
+    const validIds = new Set(validStickers.map((s) => s.id))
+    const merged = [...validStickers, ...existing.filter((s) => !validIds.has(s.id))]
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+    return { success: true, importedCount: validStickers.length }
+  } catch (err) {
+    return {
+      success: false,
+      importedCount: 0,
+      error: err instanceof Error ? err.message : 'Invalid JSON file format',
+    }
+  }
+}
+
