@@ -26,6 +26,7 @@ export const App: React.FC = () => {
   const [category, setCategory] = useState<StickerCategory>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null)
+  const [editingSticker, setEditingSticker] = useState<Sticker | null>(null)
   const [isStudioOpen, setIsStudioOpen] = useState(false)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => {
@@ -262,14 +263,22 @@ export const App: React.FC = () => {
         onClose={() => setSelectedSticker(null)}
         onDeleteCustom={handleDeleteCustom}
         onToggleFavorite={toggleFavorite}
+        onEditInStudio={(sticker) => {
+          setEditingSticker(sticker)
+          setIsStudioOpen(true)
+        }}
         onNotify={notify}
       />
 
       <PixelStudioModal
         isOpen={isStudioOpen}
-        onClose={() => setIsStudioOpen(false)}
+        initialSticker={editingSticker}
+        onClose={() => {
+          setIsStudioOpen(false)
+          setEditingSticker(null)
+        }}
         onStickerCreated={(newSticker) => {
-          setCustomStickers((prev) => [newSticker, ...prev])
+          setCustomStickers((prev) => [newSticker, ...prev.filter((s) => s.id !== newSticker.id)])
         }}
         onNotify={notify}
       />

@@ -21,6 +21,7 @@ import { StudioFormMeta } from './StudioFormMeta'
 
 interface PixelStudioModalProps {
   isOpen: boolean
+  initialSticker?: Sticker | null
   onClose: () => void
   onStickerCreated: (newSticker: Sticker) => void
   onNotify: (text: string, type: 'success' | 'error') => void
@@ -40,6 +41,7 @@ const DEFAULT_OPTIONS: PixelizerOptions = {
 
 export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
   isOpen,
+  initialSticker,
   onClose,
   onStickerCreated,
   onNotify,
@@ -55,6 +57,32 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<Exclude<StickerCategory, 'all' | 'favorites'>>('animals')
   const [tagsInput, setTagsInput] = useState('')
+
+  useEffect(() => {
+    if (!isOpen) return
+    if (initialSticker) {
+      setMode('draw')
+      setTitle(initialSticker.title)
+      setCategory(
+        (initialSticker.category === 'all' || initialSticker.category === 'favorites'
+          ? 'animals'
+          : initialSticker.category) as Exclude<StickerCategory, 'all' | 'favorites'>
+      )
+      setTagsInput(initialSticker.tags.join(', '))
+      dataUrlToPixelGrid(initialSticker.pixelDataUrl)
+        .then((grid) => {
+          if (grid.length > 0) setDrawGrid(grid)
+        })
+        .catch(console.error)
+    } else {
+      setMode('auto')
+      setTitle('')
+      setTagsInput('')
+      setReferenceUrl(null)
+      setResult(null)
+      setDrawGrid(createEmptyGrid(24, 24))
+    }
+  }, [isOpen, initialSticker])
 
   useEffect(() => {
     if (!referenceUrl) return
@@ -136,8 +164,9 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
       finalColors = result.dominantColors
     }
 
+    const stickerId = initialSticker ? initialSticker.id : `custom-${Date.now()}`
     const newSticker: Sticker = {
-      id: `custom-${Date.now()}`,
+      id: stickerId,
       title: stickerName,
       category,
       tags: tags.length > 0 ? tags : ['pixel', 'custom', category],
@@ -146,14 +175,19 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
       height: finalHeight,
       colors: finalColors,
       isCustom: true,
-      createdAt: Date.now(),
+      createdAt: initialSticker ? initialSticker.createdAt : Date.now(),
     }
 
     const saved = saveStoredSticker(newSticker)
     if (saved) {
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
       onStickerCreated(newSticker)
-      onNotify(`Added "${stickerName}" to your collection!`, 'success')
+      onNotify(
+        initialSticker
+          ? `Updated "${stickerName}" in your collection!`
+          : `Added "${stickerName}" to your collection!`,
+        'success'
+      )
       onClose()
     } else {
       onNotify('Failed to save sticker to local storage', 'error')

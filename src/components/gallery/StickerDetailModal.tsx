@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Download, Copy, Trash2, Check, ZoomIn, Heart, FileCode2 } from 'lucide-react'
+import { X, Download, Copy, Trash2, Check, ZoomIn, Heart, FileCode2, Paintbrush } from 'lucide-react'
 import type { Sticker } from '../../types/sticker.types'
 import { downloadSticker, copyStickerToClipboard } from '../../services/export/sticker_exporter.service'
 import { downloadStickerSvg, downloadStickerWebp } from '../../services/export/sticker_vector_exporter.service'
@@ -10,6 +10,7 @@ interface StickerDetailModalProps {
   onClose: () => void
   onDeleteCustom?: (id: string) => void
   onToggleFavorite?: (id: string) => void
+  onEditInStudio?: (sticker: Sticker) => void
   onNotify: (text: string, type: 'success' | 'error') => void
 }
 
@@ -259,6 +260,20 @@ export const StickerDetailModal: React.FC<StickerDetailModalProps> = ({
                   <span>WebP ({scale}x)</span>
                 </button>
               </div>
+
+              {onEditInStudio && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onEditInStudio(sticker)
+                    onClose()
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#ff6b9d]/15 hover:bg-[#ff6b9d]/25 border border-[#ff6b9d]/40 text-xs font-medium text-[#ff6b9d] hover:text-[#ff85b0] transition-colors cursor-pointer"
+                >
+                  <Paintbrush className="w-3.5 h-3.5" />
+                  <span>Edit in Studio</span>
+                </button>
+              )}
 
               {sticker.isCustom && onDeleteCustom && (
                 <button
