@@ -1,121 +1,194 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React, { useState, useEffect, useMemo } from 'react'
+import { Sparkles, ImagePlus, HeartHandshake } from 'lucide-react'
+import type { Sticker, StickerCategory } from './types/sticker.types'
+import { generateDefaultStickers } from './data/matrix_renderer'
+import { loadStoredStickers, deleteStoredSticker, exportStickersToJson } from './services/storage/sticker_storage.service'
+import { downloadSticker, copyStickerToClipboard } from './services/export/sticker_exporter.service'
+import { Navbar } from './components/layout/Navbar'
+import { Footer } from './components/layout/Footer'
+import { StickerFilter } from './components/gallery/StickerFilter'
+import { StickerGrid } from './components/gallery/StickerGrid'
+import { StickerDetailModal } from './components/gallery/StickerDetailModal'
+import { PixelStudioModal } from './components/studio/PixelStudioModal'
+import { Toast, type ToastMessage } from './components/common/Toast'
 
-function App() {
-  const [count, setCount] = useState(0)
+export const App: React.FC = () => {
+  const [defaultStickers, setDefaultStickers] = useState<Sticker[]>([])
+  const [customStickers, setCustomStickers] = useState<Sticker[]>([])
+  const [category, setCategory] = useState<StickerCategory>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null)
+  const [isStudioOpen, setIsStudioOpen] = useState(false)
+  const [toast, setToast] = useState<ToastMessage | null>(null)
+
+  // Initialize stickers on mount
+  useEffect(() => {
+    const defaults = generateDefaultStickers()
+    setDefaultStickers(defaults)
+    const stored = loadStoredStickers()
+    setCustomStickers(stored)
+  }, [])
+
+  const notify = (text: string, type: 'success' | 'error' = 'success') => {
+    setToast({ id: String(Date.now()), type, text })
+  }
+
+  // Combined sticker list
+  const allStickers = useMemo(
+    () => [...customStickers, ...defaultStickers],
+    [customStickers, defaultStickers]
+  )
+
+  // Category counts
+  const counts = useMemo(() => {
+    const map: Record<StickerCategory, number> = {
+      all: allStickers.length,
+      animals: 0,
+      food: 0,
+      gaming: 0,
+      nature: 0,
+      fantasy: 0,
+      custom: customStickers.length,
+    }
+    for (const s of allStickers) {
+      if (map[s.category] !== undefined) map[s.category]++
+    }
+    return map
+  }, [allStickers, customStickers])
+
+  // Filtered sticker list
+  const filteredStickers = useMemo(() => {
+    return allStickers.filter((sticker) => {
+      const matchCat =
+        category === 'all'
+          ? true
+          : category === 'custom'
+            ? sticker.isCustom
+            : sticker.category === category
+
+      const query = searchQuery.toLowerCase().trim()
+      const matchSearch =
+        !query ||
+        sticker.title.toLowerCase().includes(query) ||
+        sticker.tags.some((t) => t.toLowerCase().includes(query))
+
+      return matchCat && matchSearch
+    })
+  }, [allStickers, category, searchQuery])
+
+  const handleQuickDownload = async (e: React.MouseEvent, sticker: Sticker) => {
+    e.stopPropagation()
+    try {
+      await downloadSticker(sticker.pixelDataUrl, sticker.title, 4)
+      notify(`Downloaded ${sticker.title} (4x)`, 'success')
+    } catch {
+      notify('Failed to download sticker', 'error')
+    }
+  }
+
+  const handleQuickCopy = async (e: React.MouseEvent, sticker: Sticker) => {
+    e.stopPropagation()
+    const ok = await copyStickerToClipboard(sticker.pixelDataUrl, 4)
+    if (ok) {
+      notify('Sticker copied to clipboard', 'success')
+    } else {
+      notify('Clipboard access denied', 'error')
+    }
+  }
+
+  const handleDeleteCustom = (id: string) => {
+    deleteStoredSticker(id)
+    setCustomStickers((prev) => prev.filter((s) => s.id !== id))
+    notify('Custom sticker deleted', 'success')
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-[#0c0d12] text-[#f3f4f8] flex flex-col selection:bg-[#ff6b9d] selection:text-[#0c0d12]">
+      <Navbar
+        totalStickers={allStickers.length}
+        customCount={customStickers.length}
+        onOpenStudio={() => setIsStudioOpen(true)}
+        onExportBackup={() => {
+          exportStickersToJson(allStickers)
+          notify('Exported sticker vault backup JSON', 'success')
+        }}
+      />
 
-      <div className="ticks"></div>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <section className="mb-10 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-[#141622] via-[#161826] to-[#141622] border border-[#232737]">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ff6b9d]/10 border border-[#ff6b9d]/30 text-[#ff6b9d] text-xs font-mono mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Free Pixel Art & Real-time Generator</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#f3f4f8]">
+              Cute Pixel Stickers Vault
+            </h1>
+            <p className="text-xs sm:text-sm text-[#9aa1b8] mt-2 leading-relaxed">
+              Download crisp retro pixel art stickers, convert your reference images into pixel stickers in real-time, or add your own creations. 100% serverless, private, and offline-ready.
+            </p>
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setIsStudioOpen(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#ff6b9d] hover:bg-[#ff528c] text-[#0c0d12] font-semibold text-xs transition-all shadow-[0_0_20px_rgba(255,107,157,0.35)] active:scale-95"
+            >
+              <ImagePlus className="w-4 h-4 stroke-[2.5]" />
+              <span>Create from Reference</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCategory('custom')}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#272a3a] bg-[#161822] hover:border-[#383e54] text-xs font-medium text-[#9aa1b8] hover:text-[#f3f4f8] transition-colors"
+            >
+              <HeartHandshake className="w-4 h-4 text-[#ff6b9d]" />
+              <span>My Creations ({customStickers.length})</span>
+            </button>
+          </div>
+        </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {/* Sticker Gallery Filter & Grid */}
+        <StickerFilter
+          currentCategory={category}
+          searchQuery={searchQuery}
+          counts={counts}
+          onSelectCategory={setCategory}
+          onSearchChange={setSearchQuery}
+        />
+
+        <StickerGrid
+          stickers={filteredStickers}
+          onSelectSticker={setSelectedSticker}
+          onQuickDownload={handleQuickDownload}
+          onQuickCopy={handleQuickCopy}
+          onOpenStudio={() => setIsStudioOpen(true)}
+        />
+      </main>
+
+      <Footer />
+
+      {/* Modals & Overlays */}
+      <StickerDetailModal
+        sticker={selectedSticker}
+        onClose={() => setSelectedSticker(null)}
+        onDeleteCustom={handleDeleteCustom}
+        onNotify={notify}
+      />
+
+      <PixelStudioModal
+        isOpen={isStudioOpen}
+        onClose={() => setIsStudioOpen(false)}
+        onStickerCreated={(newSticker) => {
+          setCustomStickers((prev) => [newSticker, ...prev])
+        }}
+        onNotify={notify}
+      />
+
+      <Toast message={toast} onDismiss={() => setToast(null)} />
+    </div>
   )
 }
 
