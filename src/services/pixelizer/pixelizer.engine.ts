@@ -1,17 +1,21 @@
 import { findNearestColor, rgbToHex } from './color_quantizer'
 import type { PixelizerOptions, ProcessedPixelResult } from './pixelizer.types'
 import { applyStickerBorder } from './sticker_border'
+import { computePixelDimensions } from './dimension_calc'
 
 export async function processPixelArt(
   imageSource: HTMLImageElement | ImageBitmap,
   options: PixelizerOptions
 ): Promise<ProcessedPixelResult> {
-  const { pixelSize, palette, brightness, contrast, removeBackground, bgThreshold, addStickerBorder, borderColor } = options
+  const { pixelSize, aspectRatio, palette, brightness, contrast, removeBackground, bgThreshold, addStickerBorder, borderColor } = options
 
-  // Target grid resolution
-  const targetCols = Math.max(8, Math.min(128, pixelSize))
-  const aspect = imageSource.height / imageSource.width
-  const targetRows = Math.round(targetCols * aspect)
+  // Calculate target grid dimensions (clamped up to 128px) and crop coordinates
+  const { targetCols, targetRows, crop } = computePixelDimensions({
+    srcWidth: imageSource.width,
+    srcHeight: imageSource.height,
+    pixelSize,
+    aspectRatio,
+  })
 
   const canvas = document.createElement('canvas')
   canvas.width = targetCols
@@ -21,7 +25,17 @@ export async function processPixelArt(
 
   // Disable smoothing for sharp pixel scaling
   ctx.imageSmoothingEnabled = false
-  ctx.drawImage(imageSource, 0, 0, targetCols, targetRows)
+  ctx.drawImage(
+    imageSource,
+    crop.sx,
+    crop.sy,
+    crop.sw,
+    crop.sh,
+    0,
+    0,
+    targetCols,
+    targetRows
+  )
 
   const imgData = ctx.getImageData(0, 0, targetCols, targetRows)
   const data = imgData.data
