@@ -6,17 +6,20 @@ A lightweight, serverless web application showcasing curated retro pixel art sti
 
 ## 1. Key Capabilities
 
-* **Curated 8-Bit Sticker Vault:** Hand-crafted, crisp pixel stickers across 5 categories (Animals, Food & Sweets, Retro Gaming, Nature, Fantasy) with instant multi-scale downloads (1x to 8x).
-* **In-Browser Pixelizer Studio:**
+* **Curated 8-Bit Sticker Vault:** Hand-crafted, crisp pixel stickers across 6 categories (Animals, Food & Sweets, Retro Gaming, Nature, Fantasy, Custom) plus Favorites bookmarking with multi-format downloads (PNG, WebP, SVG).
+* **In-Browser Pixelizer Studio & Canvas Editor:**
   * Real-time canvas engine converting any reference photo or illustration into pixel stickers.
+  * Interactive Pixel Canvas Editor with pencil, eraser, pipette color picker, bucket fill, undo/redo, and grid overlay.
+  * Direct retouch workflow: seamlessly load auto-generated pixel stickers into the canvas to clean up stray pixels before saving.
   * Configurable pixel density (12px to 64px) and color quantization.
   * 6 Retro Palette Presets: Sweet Pastel, PICO-8 16, Game Boy 4-shade, Cyberpunk Neon, Warm Sunset, and Original Full Color.
   * Automatic background removal keying and die-cut white sticker outline generation.
-* **Client-Side Storage & Backup:**
+* **Client-Side Storage & Favorites:**
   * User-created stickers persist locally via browser storage (`localStorage`).
-  * 1-click JSON backup export.
-* **Instant Export Toolbar:**
-  * Nearest-neighbor crisp upscaling (no blur or anti-aliasing artifacts).
+  * 1-click JSON backup export and local favorites bookmarking.
+* **Multi-Format Export Toolbar:**
+  * Infinite-scale Scalable Vector Graphics (`.svg`) rendering crisp `<rect>` elements for Figma/Illustrator.
+  * Nearest-neighbor crisp upscaling PNG (1x to 8x) and lightweight WebP export.
   * Direct clipboard copy support (`ClipboardItem` API).
   * Color palette inspector with 1-click hex code copy.
 
