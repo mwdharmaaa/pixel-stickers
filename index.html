@@ -6,9 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pixely - Cute Pixel Stickers & Studio</title>
     <meta name="description" content="Download crisp pixel art stickers, convert reference images into pixel stickers in real-time, or upload your own creations." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0c0d12" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.warn('SW registration skipped:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

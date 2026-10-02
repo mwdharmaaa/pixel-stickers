@@ -1,0 +1,18 @@
+{
+  "name": "Pixely - Cute Pixel Stickers & Studio",
+  "short_name": "Pixely",
+  "description": "Download crisp pixel art stickers, convert reference images into pixel stickers in real-time, or upload your own creations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0d12",
+  "theme_color": "#0c0d12",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
