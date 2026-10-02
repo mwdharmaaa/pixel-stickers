@@ -1,6 +1,8 @@
 import React from 'react'
 import type { PalettePreset, PixelizerOptions } from '../../services/pixelizer/pixelizer.types'
 
+import { StudioResolutionRatio } from './StudioResolutionRatio'
+
 interface StudioControlsProps {
   options: PixelizerOptions
   onChange: (updated: Partial<PixelizerOptions>) => void
@@ -18,27 +20,12 @@ const PALETTE_OPTIONS: { id: PalettePreset; label: string; preview: string }[] =
 export const StudioControls: React.FC<StudioControlsProps> = ({ options, onChange }) => {
   return (
     <div className="flex flex-col gap-4 text-xs">
-      {/* Pixel Resolution Slider */}
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <label className="text-[#9aa1b8] font-medium">Pixel Grid Resolution</label>
-          <span className="font-mono text-[#ff6b9d]">{options.pixelSize}x{options.pixelSize}</span>
-        </div>
-        <input
-          type="range"
-          min="12"
-          max="64"
-          step="4"
-          value={options.pixelSize}
-          onChange={(e) => onChange({ pixelSize: Number(e.target.value) })}
-          className="w-full accent-[#ff6b9d] cursor-pointer"
-        />
-        <div className="flex justify-between text-[10px] text-[#656b82] font-mono mt-0.5">
-          <span>Retro (12px)</span>
-          <span>Balanced (32px)</span>
-          <span>Detailed (64px)</span>
-        </div>
-      </div>
+      {/* Aspect Ratio & Pixel Resolution Controls */}
+      <StudioResolutionRatio
+        pixelSize={options.pixelSize}
+        aspectRatio={options.aspectRatio}
+        onChange={onChange}
+      />
 
       {/* Palette Selection */}
       <div>
