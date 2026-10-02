@@ -28,6 +28,7 @@ interface PixelStudioModalProps {
 
 const DEFAULT_OPTIONS: PixelizerOptions = {
   pixelSize: 28,
+  aspectRatio: 'original',
   palette: 'sweet-pastel',
   brightness: 0,
   contrast: 15,
