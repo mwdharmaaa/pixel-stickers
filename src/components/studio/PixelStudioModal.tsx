@@ -29,9 +29,9 @@ interface PixelStudioModalProps {
 const DEFAULT_OPTIONS: PixelizerOptions = {
   pixelSize: 28,
   aspectRatio: 'original',
-  palette: 'sweet-pastel',
+  palette: 'full-color',
   brightness: 0,
-  contrast: 15,
+  contrast: 0,
   removeBackground: true,
   bgThreshold: 35,
   addStickerBorder: true,

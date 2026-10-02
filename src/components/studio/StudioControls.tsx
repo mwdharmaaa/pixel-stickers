@@ -9,12 +9,12 @@ interface StudioControlsProps {
 }
 
 const PALETTE_OPTIONS: { id: PalettePreset; label: string; preview: string }[] = [
+  { id: 'full-color', label: 'Original (True)', preview: '#38bdf8' },
   { id: 'sweet-pastel', label: 'Sweet Pastel', preview: '#ffb3ba' },
   { id: 'pico-8', label: 'PICO-8 16', preview: '#ff004d' },
   { id: 'gameboy', label: 'Game Boy', preview: '#8bac0f' },
   { id: 'cyberpunk', label: 'Cyberpunk', preview: '#00f0ff' },
   { id: 'warm-sunset', label: 'Warm Sunset', preview: '#ca2e55' },
-  { id: 'full-color', label: 'Original', preview: '#ffffff' },
 ]
 
 export const StudioControls: React.FC<StudioControlsProps> = ({ options, onChange }) => {
