@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { X, Sparkles, PlusCircle } from 'lucide-react'
+import { Paintbrush } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import type { Sticker, StickerCategory } from '../../types/sticker.types'
 import type { PixelizerOptions, ProcessedPixelResult } from '../../services/pixelizer/pixelizer.types'
+import type { PixelGrid } from '../../services/pixelizer/pixel_canvas.types'
 import { processPixelArt } from '../../services/pixelizer/pixelizer.engine'
+import {
+  createEmptyGrid,
+  dataUrlToPixelGrid,
+  pixelGridToDataUrl,
+  extractColorsFromGrid,
+} from '../../services/pixelizer/pixel_canvas.engine'
 import { saveStoredSticker } from '../../services/storage/sticker_storage.service'
+import { StudioHeader, type StudioMode } from './StudioHeader'
 import { StudioDropzone } from './StudioDropzone'
 import { StudioControls } from './StudioControls'
 import { StudioPreview } from './StudioPreview'
+import { StudioDrawSection } from './StudioDrawSection'
+import { StudioFormMeta } from './StudioFormMeta'
 
 interface PixelStudioModalProps {
   isOpen: boolean
@@ -33,20 +43,20 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
   onStickerCreated,
   onNotify,
 }) => {
+  const [mode, setMode] = useState<StudioMode>('auto')
   const [referenceUrl, setReferenceUrl] = useState<string | null>(null)
   const [options, setOptions] = useState<PixelizerOptions>(DEFAULT_OPTIONS)
   const [result, setResult] = useState<ProcessedPixelResult | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [drawGrid, setDrawGrid] = useState<PixelGrid>(() => createEmptyGrid(24, 24))
 
   // Form Fields
   const [title, setTitle] = useState('')
-  const [category, setCategory] = useState<Exclude<StickerCategory, 'all'>>('animals')
+  const [category, setCategory] = useState<Exclude<StickerCategory, 'all' | 'favorites'>>('animals')
   const [tagsInput, setTagsInput] = useState('')
 
-  // Trigger processing on reference or option changes
   useEffect(() => {
     if (!referenceUrl) return
-
     let cancelled = false
     setIsProcessing(true)
 
@@ -67,7 +77,6 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
       }
     }
     img.src = referenceUrl
-
     return () => {
       cancelled = true
     }
@@ -75,27 +84,61 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
 
   if (!isOpen) return null
 
-  const handleSave = () => {
-    if (!result) {
-      onNotify('Please upload a reference image first', 'error')
-      return
+  const handleRetouchInEditor = async () => {
+    if (!result) return
+    try {
+      const grid = await dataUrlToPixelGrid(result.dataUrl)
+      if (grid.length > 0) {
+        setDrawGrid(grid)
+        setMode('draw')
+        onNotify('Loaded quantized pixels into Pixel Editor for retouching!', 'success')
+      }
+    } catch {
+      onNotify('Failed to convert pixels to editable grid', 'error')
     }
+  }
 
+  const handleSave = () => {
     const stickerName = title.trim() || 'My Cute Pixel Sticker'
     const tags = tagsInput
       .split(',')
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean)
 
+    let finalDataUrl = ''
+    let finalWidth = 24
+    let finalHeight = 24
+    let finalColors: string[] = []
+
+    if (mode === 'draw') {
+      finalColors = extractColorsFromGrid(drawGrid)
+      if (finalColors.length === 0) {
+        onNotify('Canvas is blank. Please draw something first!', 'error')
+        return
+      }
+      finalDataUrl = pixelGridToDataUrl(drawGrid)
+      finalHeight = drawGrid.length
+      finalWidth = drawGrid[0].length
+    } else {
+      if (!result) {
+        onNotify('Please upload and generate a pixel sticker first', 'error')
+        return
+      }
+      finalDataUrl = result.dataUrl
+      finalWidth = result.width
+      finalHeight = result.height
+      finalColors = result.dominantColors
+    }
+
     const newSticker: Sticker = {
       id: `custom-${Date.now()}`,
       title: stickerName,
       category,
       tags: tags.length > 0 ? tags : ['pixel', 'custom', category],
-      pixelDataUrl: result.dataUrl,
-      width: result.width,
-      height: result.height,
-      colors: result.dominantColors,
+      pixelDataUrl: finalDataUrl,
+      width: finalWidth,
+      height: finalHeight,
+      colors: finalColors,
       isCustom: true,
       createdAt: Date.now(),
     }
@@ -111,108 +154,60 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
     }
   }
 
+  const canSave =
+    mode === 'draw'
+      ? extractColorsFromGrid(drawGrid).length > 0
+      : Boolean(result && !isProcessing)
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0c0d12]/85 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
       <div className="relative w-full max-w-2xl my-auto rounded-2xl border border-[#2b3044] bg-[#141620] shadow-2xl overflow-hidden text-[#f3f4f8]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#232737]">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#ff6b9d]/15 border border-[#ff6b9d]/30 flex items-center justify-center text-[#ff6b9d]">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-[#f3f4f8]">Pixelizer Studio</h2>
-              <p className="text-[11px] text-[#656b82]">Convert references into cute pixel stickers</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-[#656b82] hover:text-[#f3f4f8] hover:bg-[#1e2230] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <StudioHeader mode={mode} onSelectMode={setMode} onClose={onClose} />
 
-        {/* Studio Body */}
-        <div className="p-5 max-h-[75vh] overflow-y-auto flex flex-col gap-5">
-          <StudioDropzone onImageSelected={setReferenceUrl} />
-
-          {referenceUrl && (
+        <div className="p-5 max-h-[78vh] overflow-y-auto flex flex-col gap-4">
+          {mode === 'auto' ? (
             <>
-              <StudioPreview
-                referenceUrl={referenceUrl}
-                result={result}
-                isProcessing={isProcessing}
-              />
-
-              <StudioControls
-                options={options}
-                onChange={(upd) => setOptions((prev) => ({ ...prev, ...upd }))}
-              />
-
-              {/* Metadata Inputs */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-[#232737]">
-                <div className="sm:col-span-1">
-                  <label className="block text-xs font-medium text-[#9aa1b8] mb-1">Sticker Name</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Mochi Hamster"
-                    className="w-full px-3 py-1.5 rounded-lg bg-[#181b26] border border-[#252838] text-xs text-[#f3f4f8] placeholder-[#656b82] focus:outline-none focus:border-[#ff6b9d]"
+              <StudioDropzone onImageSelected={setReferenceUrl} />
+              {referenceUrl && (
+                <>
+                  <StudioPreview
+                    referenceUrl={referenceUrl}
+                    result={result}
+                    isProcessing={isProcessing}
                   />
-                </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-[#9aa1b8] mb-1">Category</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as Exclude<StickerCategory, 'all'>)}
-                    className="w-full px-3 py-1.5 rounded-lg bg-[#181b26] border border-[#252838] text-xs text-[#f3f4f8] focus:outline-none focus:border-[#ff6b9d]"
-                  >
-                    <option value="animals">Animals</option>
-                    <option value="food">Food & Sweets</option>
-                    <option value="gaming">Retro Gaming</option>
-                    <option value="nature">Nature</option>
-                    <option value="fantasy">Fantasy</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
+                  {result && (
+                    <button
+                      type="button"
+                      onClick={handleRetouchInEditor}
+                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[#1b1f2e] border border-[#ff6b9d]/30 hover:border-[#ff6b9d] text-[#ff6b9d] text-xs font-medium transition-all"
+                    >
+                      <Paintbrush className="w-3.5 h-3.5" />
+                      <span>Retouch Stray Pixels in Interactive Canvas</span>
+                    </button>
+                  )}
 
-                <div>
-                  <label className="block text-xs font-medium text-[#9aa1b8] mb-1">Tags (comma separated)</label>
-                  <input
-                    type="text"
-                    value={tagsInput}
-                    onChange={(e) => setTagsInput(e.target.value)}
-                    placeholder="cute, pastel, animal"
-                    className="w-full px-3 py-1.5 rounded-lg bg-[#181b26] border border-[#252838] text-xs text-[#f3f4f8] placeholder-[#656b82] focus:outline-none focus:border-[#ff6b9d]"
+                  <StudioControls
+                    options={options}
+                    onChange={(upd) => setOptions((prev) => ({ ...prev, ...upd }))}
                   />
-                </div>
-              </div>
+                </>
+              )}
             </>
+          ) : (
+            <StudioDrawSection grid={drawGrid} onChangeGrid={setDrawGrid} />
           )}
-        </div>
 
-        {/* Modal Actions */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#232737] bg-[#10121a]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-[#252838] text-xs text-[#9aa1b8] hover:text-[#f3f4f8] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={!result || isProcessing}
-            onClick={handleSave}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-[#ff6b9d] hover:bg-[#ff528c] text-[#0c0d12] font-semibold text-xs transition-all shadow-md active:scale-95 disabled:opacity-50"
-          >
-            <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-            <span>Save to My Collection</span>
-          </button>
+          <StudioFormMeta
+            title={title}
+            category={category}
+            tagsInput={tagsInput}
+            onTitleChange={setTitle}
+            onCategoryChange={setCategory}
+            onTagsInputChange={setTagsInput}
+            onSave={handleSave}
+            canSave={canSave}
+          />
         </div>
       </div>
     </div>
