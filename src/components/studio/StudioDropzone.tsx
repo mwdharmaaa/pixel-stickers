@@ -1,11 +1,17 @@
 import React, { useRef } from 'react'
-import { UploadCloud, Image as ImageIcon } from 'lucide-react'
+import { UploadCloud, Image as ImageIcon, Trash2 } from 'lucide-react'
 
 interface StudioDropzoneProps {
   onImageSelected: (dataUrl: string) => void
+  onClearImage?: () => void
+  hasImage?: boolean
 }
 
-export const StudioDropzone: React.FC<StudioDropzoneProps> = ({ onImageSelected }) => {
+export const StudioDropzone: React.FC<StudioDropzoneProps> = ({
+  onImageSelected,
+  onClearImage,
+  hasImage,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,6 +24,7 @@ export const StudioDropzone: React.FC<StudioDropzoneProps> = ({ onImageSelected 
       if (result) onImageSelected(result)
     }
     reader.readAsDataURL(file)
+    e.target.value = ''
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -98,6 +105,18 @@ export const StudioDropzone: React.FC<StudioDropzoneProps> = ({ onImageSelected 
           >
             Mug
           </button>
+          {hasImage && onClearImage && (
+            <button
+              type="button"
+              onClick={onClearImage}
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#ff6b6b]/15 hover:bg-[#ff6b6b]/25 border border-[#ff6b6b]/40 text-[#ff6b6b] text-[11px] font-medium transition-colors ml-1 cursor-pointer"
+              title="Remove active reference image"
+              aria-label="Remove active reference image"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Remove Reference</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

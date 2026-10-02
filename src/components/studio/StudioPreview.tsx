@@ -1,17 +1,19 @@
 import React from 'react'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2, Trash2 } from 'lucide-react'
 import type { ProcessedPixelResult } from '../../services/pixelizer/pixelizer.types'
 
 interface StudioPreviewProps {
   referenceUrl: string | null
   result: ProcessedPixelResult | null
   isProcessing: boolean
+  onClearReference?: () => void
 }
 
 export const StudioPreview: React.FC<StudioPreviewProps> = ({
   referenceUrl,
   result,
   isProcessing,
+  onClearReference,
 }) => {
   return (
     <div className="flex flex-col gap-3">
@@ -20,14 +22,39 @@ export const StudioPreview: React.FC<StudioPreviewProps> = ({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-[11px] text-[#656b82]">
             <span>Reference Input</span>
+            {onClearReference && referenceUrl && (
+              <button
+                type="button"
+                onClick={onClearReference}
+                className="flex items-center gap-1 text-[11px] text-[#8e95ad] hover:text-[#ff6b6b] transition-colors py-0.5 px-1.5 rounded hover:bg-[#ff6b6b]/10 cursor-pointer"
+                title="Remove reference image"
+                aria-label="Remove reference image"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Remove</span>
+              </button>
+            )}
           </div>
-          <div className="w-full aspect-square rounded-xl bg-[#10121a] border border-[#232737] p-2 flex items-center justify-center overflow-hidden">
+          <div className="relative group/ref w-full aspect-square rounded-xl bg-[#10121a] border border-[#232737] p-2 flex items-center justify-center overflow-hidden">
             {referenceUrl ? (
-              <img
-                src={referenceUrl}
-                alt="Reference"
-                className="w-full h-full object-contain"
-              />
+              <>
+                <img
+                  src={referenceUrl}
+                  alt="Reference"
+                  className="w-full h-full object-contain"
+                />
+                {onClearReference && (
+                  <button
+                    type="button"
+                    onClick={onClearReference}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-[#0c0d12]/80 hover:bg-[#ff6b6b] text-[#9aa1b8] hover:text-white border border-[#2b3044] hover:border-[#ff6b6b] transition-all opacity-0 group-hover/ref:opacity-100 shadow-md cursor-pointer"
+                    title="Remove reference image"
+                    aria-label="Remove reference image"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
             ) : (
               <span className="text-[11px] text-[#4d536b]">No image</span>
             )}

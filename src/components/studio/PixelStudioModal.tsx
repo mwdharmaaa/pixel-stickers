@@ -84,6 +84,11 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
 
   if (!isOpen) return null
 
+  const handleClearReference = () => {
+    setReferenceUrl(null)
+    setResult(null)
+  }
+
   const handleRetouchInEditor = async () => {
     if (!result) return
     try {
@@ -167,13 +172,18 @@ export const PixelStudioModal: React.FC<PixelStudioModalProps> = ({
         <div className="p-5 max-h-[78vh] overflow-y-auto flex flex-col gap-4">
           {mode === 'auto' ? (
             <>
-              <StudioDropzone onImageSelected={setReferenceUrl} />
+              <StudioDropzone
+                onImageSelected={setReferenceUrl}
+                hasImage={Boolean(referenceUrl)}
+                onClearImage={handleClearReference}
+              />
               {referenceUrl && (
                 <>
                   <StudioPreview
                     referenceUrl={referenceUrl}
                     result={result}
                     isProcessing={isProcessing}
+                    onClearReference={handleClearReference}
                   />
 
                   {result && (
